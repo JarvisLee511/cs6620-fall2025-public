@@ -1,0 +1,19 @@
+# Git and CI
+.git
+.github
+
+# Python cache files (**/ = in any folder)
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+
+# Virtual environments
+env/
+venv/
+.venv
+
+# Not needed inside the image
+README.md
+.dockerignore
+Dockerfile
