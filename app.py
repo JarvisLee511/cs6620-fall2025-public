@@ -1,4 +1,4 @@
-# Version: 1.0.1 -Built with Github Action
+# Version: 2.0 - Automated deployment (GitHub Actions + AWS SSM)
 import os
 import re
 import csv
@@ -7,9 +7,16 @@ from flask import Flask, render_template, request, jsonify, send_from_directory,
 from flask_cors import CORS
 from pydub import AudioSegment
 import tempfile
+from datetime import datetime, timezone
 
 app = Flask(__name__)
 CORS(app)
+
+# Version info for Topic 7 Exercise 3 (automated deployment)
+APP_VERSION = '2.0'
+# Set once when gunicorn loads the app, i.e. when the new container starts
+STARTED_AT = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')
+print(f'cs6620-app version {APP_VERSION} (automated deployment) started at {STARTED_AT}', flush=True)
 
 # Global variables for playlist management
 current_directory = None
@@ -141,6 +148,34 @@ def serve_audio_segment():
         return f"Error extracting audio segment: {str(e)}", 500
 
 @app.route('/')
+def hello():
+    """Version page: shows which build is running and how it was deployed."""
+    page_time = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')
+    return f'''
+    <h1>Hello from Automated CI/CD Pipeline!</h1>
+    <p><strong>Version:</strong> {APP_VERSION} - Automated Deployment</p>
+    <p><strong>Deployed via:</strong> GitHub Actions + AWS SSM</p>
+    <p><strong>Container started:</strong> {STARTED_AT}</p>
+    <p><strong>Page generated:</strong> {page_time}</p>
+    <p><strong>Assignment:</strong> Automated EC2 Deployment</p>
+    <p><a href="/player">Open the original audio player</a></p>
+    '''
+
+
+@app.route('/health')
+def health():
+    """Small JSON status endpoint for quick checks with curl."""
+    return {
+        'status': 'healthy',
+        'version': APP_VERSION,
+        'deployment_method': 'automated',
+        'container_started': STARTED_AT,
+        'timestamp': datetime.now(timezone.utc).isoformat()
+    }
+
+
+# The original audio player page, moved from / to /player
+@app.route('/player')
 def index():
     """
     Renders the main HTML page for the client-side audio player.
